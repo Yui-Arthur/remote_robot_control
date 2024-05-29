@@ -1,0 +1,41 @@
+import serial
+import time
+
+# device com port and baud rate 
+com_port = 'COM3'
+baud_rate = 9600
+# connect serial
+ser = serial.Serial(com_port, baud_rate)
+try:
+    # read capture setting
+    while not ser.in_waiting : pass
+    data_raw = ser.read_all()  
+    data = data_raw.decode()
+    capture_num, extra = data.strip('\n').split('_')
+    print(capture_num, extra)
+    
+    while True:
+        # read class id and send to nano
+        class_id = input("class id : ")
+        ser.write(bytes(class_id, encoding='utf8'))
+        # wait data reply  
+        while not ser.in_waiting: pass
+        # sleep a while for all data transmit finish
+        time.sleep(1)
+                 
+        data_raw = ser.read_all()  
+        data = data_raw.decode()
+        
+        # print('data : \n', data)
+
+        # save data or not
+        save = input("save to csv : ")
+        if int(save) == 1:
+            # write file 
+            with open(f"c{capture_num}_{extra}_data.csv", 'a') as f:
+                f.write(data.strip('\n'))
+                print("Write Data Success")
+
+except KeyboardInterrupt:
+    ser.close()
+    print('end')
