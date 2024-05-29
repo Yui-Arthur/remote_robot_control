@@ -102,7 +102,7 @@ void loop() {
     Serial.print(gY[cur], 3);
     Serial.print(',');
     Serial.print(gZ[cur], 3);
-    Serial.print(',');
+    Serial.println();
   }
   Serial.println();
 

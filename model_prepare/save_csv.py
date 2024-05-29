@@ -25,15 +25,15 @@ try:
                  
         data_raw = ser.read_all()  
         data = data_raw.decode()
-        
-        # print('data : \n', data)
+        data = data.replace('\r\n', ',').strip(',')
+        print('data : \n', data)
 
         # save data or not
         save = input("save to csv : ")
         if int(save) == 1:
             # write file 
             with open(f"c{capture_num}_{extra}_data.csv", 'a') as f:
-                f.write(data.strip('\n'))
+                f.write(data + '\n')
                 print("Write Data Success")
 
 except KeyboardInterrupt:
