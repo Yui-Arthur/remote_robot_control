@@ -32,7 +32,7 @@ try:
         save = input("save to csv : ")
         if int(save) == 1:
             # write file 
-            with open(f"c{capture_num}_{extra}_data.csv", 'a') as f:
+            with open(f"c{capture_num}_e{extra}_data.csv", 'a') as f:
                 f.write(data + '\n')
                 print("Write Data Success")
 
