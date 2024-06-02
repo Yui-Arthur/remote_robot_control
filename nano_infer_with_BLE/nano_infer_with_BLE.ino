@@ -18,6 +18,8 @@ const int total_buffer_size = capture_point * buf_scale;
 int capture_ms = 20;
 
 int current_point = 0;
+uint64_t total_captured_point = 0;
+
 float aX[total_buffer_size], aY[total_buffer_size], aZ[total_buffer_size]; 
 float gX[total_buffer_size], gY[total_buffer_size], gZ[total_buffer_size];
 
@@ -31,6 +33,7 @@ void capture(){
             IMU.readAcceleration(aX[current_point], aY[current_point], aZ[current_point]);
             IMU.readGyroscope(gX[current_point], gY[current_point], gZ[current_point]);
             current_point += 1;
+            total_captured_point += 1;
         }
 
         if(current_point >= total_buffer_size)  current_point = 0;
@@ -58,10 +61,14 @@ void setup() {
 }
 
 float data[capture_point*6];
+uint64_t last_point;
+uint64_t cur_point;
 void loop() {
+    cur_point = total_captured_point;
+    int start_point = (cur_point - capture_point) % total_buffer_size;
 
-    int start_point = (current_point - capture_point + 1) < 0 ? total_buffer_size + (current_point - capture_point + 1) : (current_point - capture_point + 1);
-
+    mbed::Timer timer;
+    timer.start();
     for(int i=0, cur = start_point; i<capture_point; i++, cur = (cur+1) % total_buffer_size){
         data[6*i + 0] = aX[cur];
         data[6*i + 1] = aY[cur];
@@ -70,9 +77,19 @@ void loop() {
         data[6*i + 4] = gY[cur];
         data[6*i + 5] = gZ[cur];
     }
-    Serial.println(t->infer(data));
+    
 
+    int c = t->infer(data);
+    timer.stop();
+    // Serial.println((cur_point - last_point));
+    Serial.println("There are " + String((unsigned long)(cur_point - last_point)) +  " new point since last inference");
+    Serial.print("pred class : ");
+    Serial.println(c);
+    Serial.print("infer time : ");
+    Serial.print(std::chrono::duration_cast<std::chrono::microseconds>(timer.elapsed_time()).count());
+    Serial.println(" (ns) \n");
+    last_point = cur_point;
+     
     rtos::ThisThread::sleep_for(1000);
-
 
 }
