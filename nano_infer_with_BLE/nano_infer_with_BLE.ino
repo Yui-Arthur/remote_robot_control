@@ -7,8 +7,8 @@
 // #include "model_data_quant.h"
 
 // model input
-const int capture_point = 15;
-const int output_gesture = 10;
+const int capture_point = 30;
+const int output_gesture = 7;
 
 const int buf_scale = 2;
 // buffer size = total capture data * scale

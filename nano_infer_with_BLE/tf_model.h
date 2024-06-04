@@ -34,9 +34,12 @@ class tf_model{
             int max_value = -1e9, cls = -1;
 
             for(int i=0; i<output_shape; i++){
+                Serial.print((interpreter->output(0)->data.int8[i] - output_zero_point) * output_scale);
+                Serial.print(" ");
                 if(interpreter->output(0)->data.int8[i] > max_value)
                     max_value = interpreter->output(0)->data.int8[i], cls = i;
             }
+            Serial.println();
 
             return cls;
         }
