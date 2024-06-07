@@ -1,4 +1,4 @@
 *.csv
 model_prepare/model/
-nano_infer_with_BLE/model_data_quant.cc
+nano_deploy/nano_infer_with_BLE/model_data_quant.h
 .vscode

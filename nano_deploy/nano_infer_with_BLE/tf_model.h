@@ -17,29 +17,37 @@ class tf_model{
             model_init();
         }
 
-        int infer(float *data){
+        int infer(float *data, float threshold){
             for(int i=0; i<input_shape; i++){
                 interpreter->input(0)->data.int8[i] = (int8_t)(data[i] / input_scale + input_zero_point);
             }
 
-            Serial.println("Invoke Start");
-
+            #ifdef DEBUG
+                Serial.println("Invoke Start");
+            #endif
             if (interpreter->Invoke() != kTfLiteOk) {
                 Serial.println("Invoke failed");
                 return -1;
             }
             
-            Serial.println("Invoke End");
+            #ifdef DEBUG
+                Serial.println("Invoke End");
+            #endif
 
-            int max_value = -1e9, cls = -1;
+            float max_value = -1e9, cls = output_shape;
 
             for(int i=0; i<output_shape; i++){
-                Serial.print((interpreter->output(0)->data.int8[i] - output_zero_point) * output_scale);
-                Serial.print(" ");
-                if(interpreter->output(0)->data.int8[i] > max_value)
-                    max_value = interpreter->output(0)->data.int8[i], cls = i;
+                float out = (interpreter->output(0)->data.int8[i] - output_zero_point) * output_scale;
+                #ifdef DEBUG
+                    Serial.print(out);
+                    Serial.print(" ");
+                #endif
+                if(out > threshold && out > max_value)
+                    max_value = out, cls = i;
             }
-            Serial.println();
+            #ifdef DEBUG
+                Serial.println();
+            #endif
 
             return cls;
         }

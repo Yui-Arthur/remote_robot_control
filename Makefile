@@ -1,20 +1,27 @@
 compiler = arduino-cli
 device = arduino:mbed_nano:nano33ble
 prepare = model_prepare/IMU_Capture
-deploy = nano_infer_with_BLE
+deploy = nano_deploy/nano_infer_with_BLE
+
 port ?= 0
 
-extra_arg = 
+python_arg = 
+compile_arg =
 win ?= 0
+debug ?= 0
 ifeq ($(win), 1)
-	extra_arg = -win
+	python_arg = -win
+endif
+
+ifeq ($(debug), 1)
+	compile_arg =--build-property build.extra_flags=-DDEBUG
 endif
 
 build-p : 
 	$(compiler) compile --fqbn $(device) $(prepare)
 
 build-d : 
-	$(compiler) compile --fqbn $(device) $(deploy)
+	$(compiler) compile $(compile_arg) --fqbn $(device) $(deploy)
 
 run-p :
 	$(compiler) upload -p /dev/ttyACM$(port) --fqbn $(device) $(prepare)
@@ -25,10 +32,10 @@ run-d :
 	make watch-d port=$(port) win=$(win)
 
 watch-p :
-	python ./model_prepare/save_csv.py -p ${port} ${extra_arg}
+	python ./model_prepare/save_csv.py -p ${port} ${python_arg}
 
 watch-d:
-	python ./nano_infer_with_BLE/watch.py -p ${port} ${extra_arg}
+	python ./nano_deploy/watch.py -p ${port} ${python_arg}
 
 help:
 	
