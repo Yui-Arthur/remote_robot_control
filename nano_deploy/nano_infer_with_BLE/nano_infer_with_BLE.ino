@@ -42,7 +42,7 @@ void BLE_service(){
     // Serial.println("BLE thread started");
     while(1){
         BLEDevice central = BLE.central();
-        rtos::ThisThread::sleep_for(100);
+        rtos::ThisThread::sleep_for(1500);
         if(central){
 
             while (central.connected()) {
@@ -90,7 +90,7 @@ void setup() {
 
     // tflm init
     tflite::InitializeTarget();
-    t = new tf_model(capture_point, output_gesture, arena_size);
+    t = new tf_model(capture_point*6, output_gesture, arena_size);
 
     // start capute thread
     capture_thread.start(capture);
@@ -108,12 +108,13 @@ void loop() {
     mbed::Timer timer;
     timer.start();
     for(int i=0, cur = start_point; i<capture_point; i++, cur = (cur+1) % total_buffer_size){
-        data[6*i + 0] = aX[cur];
-        data[6*i + 1] = aY[cur];
-        data[6*i + 2] = aZ[cur];
-        data[6*i + 3] = gX[cur];
-        data[6*i + 4] = gY[cur];
-        data[6*i + 5] = gZ[cur];
+        data[6*i + 0] = (aX[cur] + 4.0) / 8.0;
+        data[6*i + 1] = (aY[cur] + 4.0) / 8.0;
+        data[6*i + 2] = (aZ[cur] + 4.0) / 8.0;
+
+        data[6*i + 3] = (gX[cur] + 2000.0) / 4000.0;
+        data[6*i + 4] = (gY[cur] + 2000.0) / 4000.0;
+        data[6*i + 5] = (gZ[cur] + 2000.0) / 4000.0;
     }
     int pred_class = t->infer(data, threshold);
     pred_count[pred_class]++;
@@ -125,9 +126,9 @@ void loop() {
         Serial.print("infer time : ");
         Serial.print(std::chrono::duration_cast<std::chrono::microseconds>(timer.elapsed_time()).count());
         Serial.println(" (ns) \n");
+        rtos::ThisThread::sleep_for(infer_sleep_ms);
+        last_point = cur_point;
     #endif
-    last_point = cur_point;
      
-    rtos::ThisThread::sleep_for(infer_sleep_ms);
 
 }

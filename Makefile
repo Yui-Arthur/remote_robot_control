@@ -2,6 +2,7 @@ compiler = arduino-cli
 device = arduino:mbed_nano:nano33ble
 prepare = model_prepare/IMU_Capture
 deploy = nano_deploy/nano_infer_with_BLE
+compile_output = nano_deploy/nano_infer_with_BLE/compiled
 
 port ?= 0
 
@@ -14,14 +15,14 @@ ifeq ($(win), 1)
 endif
 
 ifeq ($(debug), 1)
-	compile_arg =--build-property build.extra_flags=-DDEBUG
+	compile_arg =--build-property build.extra_flags=-DDEBUG 
 endif
 
 build-p : 
 	$(compiler) compile --fqbn $(device) $(prepare)
 
 build-d : 
-	$(compiler) compile $(compile_arg) --fqbn $(device) $(deploy)
+	$(compiler) compile $(compile_arg) --fqbn $(device) --output-dir $(compile_output) $(deploy)
 
 run-p :
 	$(compiler) upload -p /dev/ttyACM$(port) --fqbn $(device) $(prepare)
