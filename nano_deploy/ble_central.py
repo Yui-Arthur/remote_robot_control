@@ -3,6 +3,7 @@ import contextlib
 from bleak import BleakClient, BleakScanner
 from threading import Thread
 import time
+import requests
 
 async def connect_and_recv(name, lock, address, characteristic_uuid, class_name, opearate):
     
@@ -26,12 +27,17 @@ async def connect_and_recv(name, lock, address, characteristic_uuid, class_name,
         except Exception as e:
             print(e)
 
-async def send_operation(left_operate, right_operate):
+async def send_operation(raspberry_pi_server, send_interval_ms, left_operate, right_operate):
     async with contextlib.AsyncExitStack() as stack:
         while 1:
-            """ TODO send request here """
-            print(f"latest operation ({left_operate[0]}, {right_operate[0]})")
-            await asyncio.sleep(10.0)
+            url = f"http://{raspberry_pi_server[0]}:{raspberry_pi_server[1]}/?car={left_operate[0]}&arm={right_operate[0]}"
+            try:
+                response = requests.get(url, timeout=1)
+                print(f"latest operation ({left_operate[0]}, {right_operate[0]})")
+            except Exception as e:
+                print(f"sending operation error {e}")
+            finally:
+                await asyncio.sleep(send_interval_ms / 1000)
 
 right_address = "50:13:05:5b:a0:8a"
 right_class_name = ["front", "back", "up", "down", "left", "right", "stop", "continue"]
@@ -41,6 +47,8 @@ left_address = "66:7B:B5:7D:84:C9"
 left_class_name = ["front", "back", "up", "down", "left", "right", "stop", "continue"]
 left_characteristic_uuid = "00000000-eeee-eeee-eeee-eeeeeeeeeeee"
 
+raspberry_pi_server = ("localhost", 8888)
+send_interval_ms = 10000
 right_operate = [0]
 left_operate = [0]
 
@@ -48,7 +56,7 @@ async def main():
     lock = asyncio.Lock()
     letf_task = asyncio.create_task(connect_and_recv("left", lock, left_address, left_characteristic_uuid, left_class_name, left_operate))
     right_task = asyncio.create_task(connect_and_recv("right", lock, right_address, right_characteristic_uuid, right_class_name, right_operate))
-    send_task = asyncio.create_task(send_operation(left_operate, right_operate))
+    send_task = asyncio.create_task(send_operation(raspberry_pi_server, send_interval_ms, left_operate, right_operate))
     await right_task
     await letf_task
     await send_task
