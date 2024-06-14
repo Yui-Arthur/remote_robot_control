@@ -38,6 +38,9 @@ watch-p :
 watch-d:
 	python ./nano_deploy/watch.py -p ${port} ${python_arg}
 
+clean:
+	rm $(compile_output)/*
+
 help:
 	
 	@echo "usage  :"

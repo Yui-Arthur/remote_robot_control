@@ -5,7 +5,7 @@ from threading import Thread
 import time
 import requests
 
-async def connect_and_recv(name, lock, address, characteristic_uuid, class_name, opearate):
+async def connect_and_recv(name, lock, address, characteristic_uuid, class_name, opearate, sedding_tpye):
     
     while 1:
         try:
@@ -19,10 +19,16 @@ async def connect_and_recv(name, lock, address, characteristic_uuid, class_name,
                     print(f"connect {address} success !")
             
                 while(1):
-                    class_id = await client.read_gatt_char(characteristic_uuid)     
-                    class_id = int.from_bytes(class_id, "big")
-                    opearate[0] = class_id
-                    print(f"Recv {name} Class:" , class_name[class_id])
+                    if sedding_tpye == 1:
+                        pred_cnt = await client.read_gatt_char(characteristic_uuid)     
+                        pred_cnt = pred_cnt.decode('ascii').split(' ')
+                        print(f"pred cnt : {' '.join(pred_cnt[:-1])}")
+                        print(f"final pred : {pred_cnt[-1]}")
+                    else:
+                        class_id = await client.read_gatt_char(characteristic_uuid)   
+                        class_id = int.from_bytes(class_id, "big")
+                        opearate[0] = class_id
+                        print(f"Recv {name} Class:" , class_name[class_id])
                 
         except Exception as e:
             print(e)
@@ -48,14 +54,15 @@ left_class_name = ["front", "back", "up", "down", "left", "right", "stop", "cont
 left_characteristic_uuid = "00000000-eeee-eeee-eeee-eeeeeeeeeeee"
 
 raspberry_pi_server = ("localhost", 8888)
-send_interval_ms = 10000
+send_interval_ms = 100 * 1000
+sedding_tpye = 0
 right_operate = [0]
 left_operate = [0]
 
 async def main():
     lock = asyncio.Lock()
-    letf_task = asyncio.create_task(connect_and_recv("left", lock, left_address, left_characteristic_uuid, left_class_name, left_operate))
-    right_task = asyncio.create_task(connect_and_recv("right", lock, right_address, right_characteristic_uuid, right_class_name, right_operate))
+    letf_task = asyncio.create_task(connect_and_recv("left", lock, left_address, left_characteristic_uuid, left_class_name, left_operate, sedding_tpye))
+    right_task = asyncio.create_task(connect_and_recv("right", lock, right_address, right_characteristic_uuid, right_class_name, right_operate, sedding_tpye))
     send_task = asyncio.create_task(send_operation(raspberry_pi_server, send_interval_ms, left_operate, right_operate))
     await right_task
     await letf_task

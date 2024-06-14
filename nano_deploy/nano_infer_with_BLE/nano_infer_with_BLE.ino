@@ -1,6 +1,6 @@
 
 #include "Arduino_BMI270_BMM150.h"
-#include "Arduino_LSM9DS1.h"
+// #include "Arduino_LSM9DS1.h"
 #include "mbed.h"
 #include "rtos.h"
 #include "tf_model.h"
@@ -11,7 +11,7 @@ int current_point = 0;
 uint64_t total_captured_point = 0;
 
 BLEService gestureService(deviceServiceUuid); 
-BLEByteCharacteristic gestureCharacteristic(deviceServiceCharacteristicUuid, BLERead | BLEWrite);
+BLECharacteristic gestureCharacteristic(deviceServiceCharacteristicUuid, BLERead | BLEWrite, 100);
 
 float aX[total_buffer_size], aY[total_buffer_size], aZ[total_buffer_size]; 
 float gX[total_buffer_size], gY[total_buffer_size], gZ[total_buffer_size];
@@ -39,7 +39,6 @@ void capture(){
 
 // ble connect and send
 void BLE_service(){
-    // Serial.println("BLE thread started");
     while(1){
         BLEDevice central = BLE.central();
         rtos::ThisThread::sleep_for(1500);
@@ -47,13 +46,29 @@ void BLE_service(){
 
             while (central.connected()) {
                 int final_pred = -1, max_value = -1;
-                for(int i=0; i <= output_gesture; i++){
-                    if(pred_count[i] > max_value)
-                        max_value = pred_count[i], final_pred = i;
-                    pred_count[i] = 0;
-                }
-
-                gestureCharacteristic.writeValue((byte)final_pred);
+                
+                #if (SEDDING_TYPE == 1)
+                    String s;
+                    byte buf[300];
+                    for(int i=0; i <= output_gesture; i++){
+                        s += String(pred_count[i]) + " ";
+                        if(pred_count[i] > max_value)
+                            max_value = pred_count[i], final_pred = i;
+                        pred_count[i] = 0;
+                    }
+                    s += String(final_pred);
+                    s.getBytes(buf, 300);
+                    gestureCharacteristic.writeValue(buf, s.length());
+                #else
+                    
+                    for(int i=0; i <= output_gesture; i++){
+                        if(pred_count[i] > max_value)
+                            max_value = pred_count[i], final_pred = i;
+                        pred_count[i] = 0;
+                    }
+                
+                    gestureCharacteristic.writeValue(byte(final_pred));
+                #endif
                 rtos::ThisThread::sleep_for(BLE_send_ms);
             }
                 
