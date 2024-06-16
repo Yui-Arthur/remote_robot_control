@@ -21,8 +21,8 @@ try:
     while not ser.in_waiting : pass
     data_raw = ser.read_all()  
     data = data_raw.decode()
-    capture_num, extra = data.strip('\n').split('_')
-    print(capture_num, extra)
+    capture_num, extra, capture_ms = data.strip('\n').split('_')
+    print(capture_num, extra, capture_ms)
     
     while True:
         # read class id and send to nano
@@ -42,7 +42,7 @@ try:
         save = input("save to csv : ")
         if int(save) == 1:
             # write file 
-            with open(f"c{capture_num}_e{extra}_data.csv", 'a') as f:
+            with open(f"c{capture_num}_e{extra}_m{capture_ms}_data.csv", 'a') as f:
                 f.write(data + '\n')
                 print("Write Data Success")
 

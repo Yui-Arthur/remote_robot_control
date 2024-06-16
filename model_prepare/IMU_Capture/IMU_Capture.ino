@@ -71,7 +71,7 @@ void setup() {
   
   // start capute thread
   thread.start(capture);
-  Serial.print(String(capture_point) + "_" + String(extra_point));
+  Serial.print(String(capture_point) + "_" + String(extra_point) + "_" + String(capture_ms));
 }
 
 
