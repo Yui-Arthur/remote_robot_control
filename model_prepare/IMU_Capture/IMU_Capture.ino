@@ -17,26 +17,27 @@
 */
 
 #include "Arduino_BMI270_BMM150.h"
-#include "Arduino_LSM9DS1.h"
+// #include "Arduino_LSM9DS1.h"
 #include "mbed.h"
 #include "rtos.h"
 
 // model input
-const int capture_point = 10;
+const int capture_point = 20;
 // +-range with extra data
-const int extra_point = 5;
+const int extra_point = 10;
 // total capture data = capture - extra point ~ capture + extra point 
 const int total_capture = capture_point + 2*extra_point;
 
-const int buf_scale = 2;
+const int buf_scale = 4;
 // buffer size = total capture data * scale
 const int total_buffer_size = total_capture * buf_scale; 
 
 // delay time between two capture
-int capture_ms = 20;
+int capture_ms = 15;
 
 
 int current_point = 0;
+uint64_t total_point = 0;
 float aX[total_buffer_size], aY[total_buffer_size], aZ[total_buffer_size]; 
 float gX[total_buffer_size], gY[total_buffer_size], gZ[total_buffer_size];
 rtos::Thread thread;
@@ -49,6 +50,7 @@ void capture(){
       IMU.readAcceleration(aX[current_point], aY[current_point], aZ[current_point]);
       IMU.readGyroscope(gX[current_point], gY[current_point], gZ[current_point]);
       current_point += 1;
+      total_point += 1;
     }
 
     if(current_point >= total_buffer_size)  current_point = 0;
@@ -86,7 +88,7 @@ void loop() {
   rtos::ThisThread::sleep_for((capture_point + extra_point) * capture_ms);
 
   // start point idx = current_point - total_capture + 1, if res < 0 => + total_buffer_size 
-  int start_point = (current_point - total_capture + 1) < 0 ? total_buffer_size + (current_point - total_capture + 1) : (current_point - total_capture + 1);
+  int start_point = (total_point - total_capture) % total_buffer_size;
   Serial.print(class_id);
   Serial.print(",");
   // print data to serial
