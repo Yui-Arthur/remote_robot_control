@@ -104,20 +104,22 @@ class tf_model{
             Serial.println("Invoke Test Start");
             int pred_cnt[output_shape] = {0};
 
-            for(int i=0; i < data_point ; i+=6){
-                example_data[i + 0] = ((example_data[i + 0] + 4.0) / 8.0) / input_scale + input_zero_point;
-                example_data[i + 1] = ((example_data[i + 1] + 4.0) / 8.0) / input_scale + input_zero_point;
-                example_data[i + 2] = ((example_data[i + 2] + 4.0) / 8.0) / input_scale + input_zero_point;
-                example_data[i + 3] = ((example_data[i + 3] + 2000.0) / 4000.0) / input_scale + input_zero_point;
-                example_data[i + 4] = ((example_data[i + 4] + 2000.0) / 4000.0) / input_scale + input_zero_point;
-                example_data[i + 5] = ((example_data[i + 5] + 2000.0) / 4000.0) / input_scale + input_zero_point;
-            }
+            // for(int i=0; i < data_point ; i+=6){
+            //     example_data[i + 0] = ((example_data[i + 0] + 4.0) / 8.0) / input_scale + input_zero_point;
+            //     example_data[i + 1] = ((example_data[i + 1] + 4.0) / 8.0) / input_scale + input_zero_point;
+            //     example_data[i + 2] = ((example_data[i + 2] + 4.0) / 8.0) / input_scale + input_zero_point;
+            //     example_data[i + 3] = ((example_data[i + 3] + 2000.0) / 4000.0) / input_scale + input_zero_point;
+            //     example_data[i + 4] = ((example_data[i + 4] + 2000.0) / 4000.0) / input_scale + input_zero_point;
+            //     example_data[i + 5] = ((example_data[i + 5] + 2000.0) / 4000.0) / input_scale + input_zero_point;
+            // }
             
-            for(int i=0; i < data_point - input_shape; i+=6){
+            for(int i=0; i < data_point - 2*input_shape; i+=6){
 
-                for(int j=0; j<input_shape; j++){
+                for(int j=0, k=0; j<input_shape; j+=3, k+=6){
 
-                    interpreter->input(0)->data.int8[j] = example_data[i+j];
+                    interpreter->input(0)->data.int8[j] = example_data[i+k];
+                    interpreter->input(0)->data.int8[j+1] = example_data[i+k+1];
+                    interpreter->input(0)->data.int8[j+2] = example_data[i+k+2];
                     // Serial.print(example_data[i+j]);
                     // Serial.print(" ");
                 }

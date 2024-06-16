@@ -105,7 +105,7 @@ void setup() {
 
     // tflm init
     tflite::InitializeTarget();
-    t = new tf_model(capture_point*6, output_gesture, arena_size);
+    t = new tf_model(capture_point*3, output_gesture, arena_size);
 
     // start capute thread
     capture_thread.start(capture);
@@ -113,7 +113,7 @@ void setup() {
     
 }
 
-float data[capture_point*6];
+float data[capture_point*3];
 uint64_t last_point;
 uint64_t cur_point;
 void loop() {
@@ -123,13 +123,17 @@ void loop() {
     mbed::Timer timer;
     timer.start();
     for(int i=0, cur = start_point; i<capture_point; i++, cur = (cur+1) % total_buffer_size){
-        data[6*i + 0] = (aX[cur] + 4.0) / 8.0;
-        data[6*i + 1] = (aY[cur] + 4.0) / 8.0;
-        data[6*i + 2] = (aZ[cur] + 4.0) / 8.0;
+        // data[6*i + 0] = (aX[cur] + 4.0) / 8.0;
+        // data[6*i + 1] = (aY[cur] + 4.0) / 8.0;
+        // data[6*i + 2] = (aZ[cur] + 4.0) / 8.0;
 
-        data[6*i + 3] = (gX[cur] + 2000.0) / 4000.0;
-        data[6*i + 4] = (gY[cur] + 2000.0) / 4000.0;
-        data[6*i + 5] = (gZ[cur] + 2000.0) / 4000.0;
+        // data[6*i + 3] = (gX[cur] + 2000.0) / 4000.0;
+        // data[6*i + 4] = (gY[cur] + 2000.0) / 4000.0;
+        // data[6*i + 5] = (gZ[cur] + 2000.0) / 4000.0;
+
+        data[3*i + 0] = aX[cur];
+        data[3*i + 1] = aY[cur];
+        data[3*i + 2] = aZ[cur];
     }
     int pred_class = t->infer(data, threshold);
     pred_count[pred_class]++;
@@ -141,9 +145,9 @@ void loop() {
         Serial.print("infer time : ");
         Serial.print(std::chrono::duration_cast<std::chrono::microseconds>(timer.elapsed_time()).count());
         Serial.println(" (ns) \n");
-        rtos::ThisThread::sleep_for(infer_sleep_ms);
         last_point = cur_point;
     #endif
+    rtos::ThisThread::sleep_for(infer_sleep_ms);
      
 
 }
